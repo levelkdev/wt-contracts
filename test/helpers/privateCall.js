@@ -4,9 +4,13 @@ const lif2LifWei = require('./misc').lif2LifWei;
 
 const LifToken = artifacts.require('LifToken.sol');
 const Unit = artifacts.require('Unit.sol');
+const Hotel = artifacts.require('Hotel.sol');
+const WTIndex = artifacts.require('WTIndex.sol');
 
 abiDecoder.addABI(Unit._json.abi);
 abiDecoder.addABI(LifToken._json.abi);
+abiDecoder.addABI(Hotel._json.abi);
+abiDecoder.addABI(WTIndex._json.abi);
 /**
  * A library of helpers that spin up various privateCall / booking interactions.
  */
@@ -38,17 +42,24 @@ abiDecoder.addABI(LifToken._json.abi);
  *
  *   } = await help.runBeginCall(unit, augusto, 'approveData', accounts, getUnitsLengthData)
  */
-async function runBeginCall(hotel, unit, client, tokenOp, accounts, passThroughData, _userInfo, receiver ){
+async function runBeginCall(hotel, unit, client, fromDay, daysAmount, price, tokenOp, accounts, passThroughData, _userInfo, receiver ){
   const userInfo = _userInfo || web3.toHex('user info');
-  const value = lif2LifWei(10);
 
   const crowdsale = await simulateCrowdsale(100000000000, [40,30,20,10,0], accounts, 1);
   const token = LifToken.at(await crowdsale.token.call());
+  const wtIndex = await WTIndex.at(await hotel.owner());
+  await wtIndex.setLifToken(token.address);
 
   const hotelInitialBalance = await token.balanceOf(hotel.address);
   const clientInitialBalance = await token.balanceOf(client);
 
-  const bookData = hotel.contract.book.getData(unit.address, client, 60, 5, passThroughData);
+  const setPriceData = unit.contract.setDefaultLifTokenPrice.getData(price);
+  const callUnitData = hotel.contract.callUnit.getData(unit.address, setPriceData);
+  await wtIndex.callHotel(0, callUnitData, {from: (await hotel.manager())});
+
+  const value = await unit.getPrice(fromDay, daysAmount);
+
+  const bookData = hotel.contract.book.getData(unit.address, client, fromDay, daysAmount, passThroughData);
   const beginCallData = hotel.contract.beginCall.getData(bookData, userInfo);
 
   const tokenOpCalls = {
@@ -106,4 +117,3 @@ module.exports = {
   runBeginCall: runBeginCall,
   runContinueCall: runContinueCall
 }
-

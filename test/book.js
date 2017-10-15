@@ -1,101 +1,116 @@
 const assert = require('chai').assert;
 const help = require('./helpers/index.js');
-const abiDecoder = require('abi-decoder');
-
-const WTHotel = artifacts.require('Hotel.sol')
-const WTIndex = artifacts.require('WTIndex.sol');
-const LifToken = artifacts.require('LifToken.sol');
-const Unit = artifacts.require('Unit.sol')
 
 contract('Hotel / PrivateCall: bookings', function(accounts) {
   const augusto = accounts[1];
   const hotelAccount = accounts[2];
+  const jakub = accounts[3];
   const typeName = 'BASIC_ROOM';
-  const fromDay = 60;
-  const daysAmount = 5;
-  const unitPrice = 1;
-
-  let index;
-  let hotel;
-  let unitType;
-  let unit;
-  let stubData;
-
-  // Create and register a hotel
-  beforeEach( async function(){
-    index = await WTIndex.new();
-    hotel = await help.createHotel(index, hotelAccount);
-    unitType = await help.addUnitTypeToHotel(index, hotel, typeName, hotelAccount);
-    stubData = index.contract.getHotels.getData();
-  });
 
   describe('reservations', function(){
-    let beginCallData;
-    let callerInitialBalance;
-    let clientInitialBalance;
     let events;
     let hash;
-    let token;
-    let unit;
-    let value;
+    const fromDay = 60;
+    const daysAmount = 5;
+    const price = 1;
 
     // Add a unit that accepts instant booking, execute a token.transferData booking
     beforeEach(async function() {
-      unit = await help.addUnitToHotel(index, hotel, typeName, hotelAccount, false);
-      ({
-        beginCallData,
-        hotelInitialBalance,
-        clientInitialBalance,
-        events,
-        hash,
-        token,
-        value
-      } = await help.runBeginCall(hotel, unit, augusto, fromDay, daysAmount, unitPrice, 'approveData', accounts, stubData));
+      const args = [
+        augusto,
+        hotelAccount,
+        accounts,
+        fromDay,
+        daysAmount,
+        price
+      ];
+
+      ({ events, hash, unit } = await help.bookInstantly(...args));
     });
 
-    it('should return successfully when calling book on itself from PrivateCall', async () => {
-      let pendingCall = await hotel.pendingCalls(hash);
-      assert(pendingCall[3]);
-    })
+    it('should make a reservation', async () => {
+      const range = _.range(fromDay, fromDay + daysAmount);
 
-    it('should make the reservation', async () => {
-      const toDay = fromDay + daysAmount;
-      for(var i = fromDay; i < toDay; i++) {
-        assert.equal((await unit.getReservation(i))[1], augusto);
+      for (let day of range) {
+        const [ specialPrice, bookedBy ] = await unit.getReservation(day);
+        assert.equal(bookedBy, augusto);
       }
     });
 
     it('should fire a Book event with the correct info', async () => {
       const bookEvent = events.filter(item => item && item.name === 'Book')[0].events;
-      const fromValue = bookEvent.filter(item => item && item.name === 'from')[0].value;
-      const fromDayValue = bookEvent.filter(item => item && item.name === 'fromDay')[0].value;
-      const daysAmountValue = bookEvent.filter(item => item && item.name === 'daysAmount')[0].value;
-      assert.equal(fromValue, augusto);
-      assert.equal(fromDayValue, fromDay);
-      assert.equal(daysAmountValue, daysAmount);
+      const fromTopic = bookEvent.filter(item => item && item.name === 'from')[0];
+      const fromDayTopic = bookEvent.filter(item => item && item.name === 'fromDay')[0];
+      const daysAmountTopic = bookEvent.filter(item => item && item.name === 'daysAmount')[0];
+
+      assert.equal(fromTopic.value, augusto);
+      assert.equal(fromDayTopic.value, fromDay);
+      assert.equal(daysAmountTopic.value, daysAmount);
     });
 
-    it('should not return successfully if any of the days requested are already reserved', async() => {
-      const bookData = hotel.contract.book.getData(unit.address, augusto, fromDay-2, daysAmount, stubData);
-      const beginCallData = hotel.contract.beginCall.getData(bookData, web3.toHex('user info'));
-      const approveDataTx = await token.approveData(hotel.address, value, beginCallData, {from: augusto});
+    it('should make a res that starts on the day a previous res ends', async () => {
+      const nextFrom = fromDay + daysAmount;
+      const nextAmount = 2;
+      const args = [
+        jakub,
+        hotelAccount,
+        accounts,
+        nextFrom,
+        nextAmount,
+        price
+      ];
+      ({ unit } = await help.bookInstantly(...args));
 
-      const events = abiDecoder.decodeLogs(approveDataTx.receipt.logs);
-      const callStarted = events.filter(item => item && item.name === 'CallStarted')[0];
-      const dataHashTopic = callStarted.events.filter(item => item.name === 'dataHash')[0];
-      let pendingCall = await hotel.pendingCalls(dataHashTopic.value);
-      assert(!pendingCall[3]);
+      const range = _.range(nextFrom, nextFrom + nextAmount);
+      for (let day of range) {
+        const [ specialPrice, bookedBy ] = await unit.getReservation(day);
+        assert.equal(bookedBy, jakub);
+      }
     })
 
-    it.skip('should throw if any of the days requested are already reserved', async() => {
+    it('should throw if zero days are reserved', async () => {
+      const nextFrom = fromDay + daysAmount;
+      const nextAmount = 0;
+      const args = [
+        jakub,
+        hotelAccount,
+        accounts,
+        nextFrom,
+        nextAmount,
+        price
+      ];
 
+      try {
+        await help.bookInstantly(...args);
+        assert(false);
+      } catch (e) {
+        help.isInvalidOpcodeEx(e);
+      }
     });
 
+    it('should should throw if any of the days requested are already reserved', async () => {
+      const takenDay = fromDay + 1;
+      const args = [
+        jakub,
+        hotelAccount,
+        accounts,
+        takenDay,
+        daysAmount,
+        price
+      ];
+
+      try {
+        await help.bookInstantly(...args);
+        assert(false);
+      } catch (e) {
+        help.isInvalidOpcodeEx(e);
+      }
+    })
+
+    // This needs:
+    // Contract logic about the current date.
+    // Combing through the helpers and tests to remove '60' and provide an accurate date.
     it.skip('should throw when reserving dates in the past', async() => {
-
-    });
-
-    it.skip('should throw if zero days are reserved', async() => {
 
     });
   });

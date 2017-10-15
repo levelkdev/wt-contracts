@@ -20,7 +20,10 @@ abiDecoder.addABI(WTIndex._json.abi);
  * @param  {Instance} hotel            Hotel instance that inherits from PrivateCall
  * @param  {Instance} unit             Unit instance being booked
  * @param  {Address}  client           Address of the person making a booking
- * @param  {String}   tokenOp          'approveData' or 'transferData'
+ * @param  {Number}   fromDay          Day after 01-01-1970 booking starts
+ * @param  {Number}   daysAmount       Number of days to book for
+ * @param  {Number}   price            Default LifToken price ?
+ * @param  {String}   tokenOp          'approveData' || 'transferData' || 'transferDataFrom'
  * @param  {Array}    accounts         The truffle contract accounts
  * @param  {Code}     passThroughData  call data to be executed in the Book drop through.
  * @param  {String}   userInfo         hex string: useful for non-duplicate calls
@@ -42,7 +45,19 @@ abiDecoder.addABI(WTIndex._json.abi);
  *
  *   } = await help.runBeginCall(unit, augusto, 'approveData', accounts, getUnitsLengthData)
  */
-async function runBeginCall(hotel, unit, client, fromDay, daysAmount, price, tokenOp, accounts, passThroughData, _userInfo, receiver ){
+async function runBeginCall(
+  hotel,
+  unit,
+  client,
+  fromDay,
+  daysAmount,
+  price,
+  tokenOp,
+  accounts,
+  passThroughData,
+  _userInfo,
+  receiver
+){
   const userInfo = _userInfo || web3.toHex('user info');
 
   const crowdsale = await simulateCrowdsale(100000000000, [40,30,20,10,0], accounts, 1);

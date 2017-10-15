@@ -96,13 +96,13 @@ contract Unit is Ownable {
     require(active);
     uint toDay = fromDay+daysAmount;
 
-    for (uint i = fromDay; i <= toDay ; i++){
+    for (uint i = fromDay; i < toDay ; i++){
       if (reservations[i].bookedBy != address(0)) {
         return false;
       }
     }
 
-    for (i = fromDay; i <= toDay ; i++)
+    for (i = fromDay; i < toDay ; i++)
       reservations[i].bookedBy = from;
     Book(from, fromDay, daysAmount);
     return true;
@@ -133,7 +133,7 @@ contract Unit is Ownable {
     uint toDay = fromDay+daysAmount;
     uint totalPrice = 0;
 
-    for (uint i = fromDay; i <= toDay ; i++){
+    for (uint i = fromDay; i < toDay ; i++){
       if (bytes(reservations[i].specialPrice).length != 0) {
         //TODO: add the specialPrice to total
       } else {

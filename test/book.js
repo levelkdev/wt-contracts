@@ -7,22 +7,97 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
   const jakub = accounts[3];
   const typeName = 'BASIC_ROOM';
 
-  describe('reservations', function(){
-    let events;
-    let hash;
+  describe('instant payment with token', function () {
     const fromDay = 60;
     const daysAmount = 5;
-    const price = 1;
+    const unitPrice = 1;
+    let args;
 
-    // Add a unit that accepts instant booking, execute a token.transferData booking
-    beforeEach(async function() {
-      const args = [
+    beforeEach(function() {
+      args = [
         augusto,
         hotelAccount,
         accounts,
         fromDay,
         daysAmount,
-        price
+        unitPrice,
+      ];
+    })
+
+    it('should transfer tokens from client account to the hotel contract', async () => {
+      const {
+        clientInitialBalance,
+        hotelInitialBalance,
+        hotel,
+        token
+      } = await help.bookInstantly(...args);
+
+      const totalCost = daysAmount * unitPrice;
+      const augustoFinalBalance = await token.balanceOf(augusto);
+      const hotelFinalBalance = await token.balanceOf(hotel.address);
+
+      assert(augustoFinalBalance.lt(clientInitialBalance));
+      assert(hotelFinalBalance.gt(hotelInitialBalance));
+      assert(augustoFinalBalance.eq(clientInitialBalance.sub(totalCost)));
+      assert(hotelFinalBalance.eq(hotelInitialBalance.add(totalCost)));
+    });
+
+    // Room is different - more setup work.
+    it('should revert the clients approval if the call fails', async () => {
+      // Make a booking
+      await help.bookInstantly(...args);
+
+      // Make another booking that overlaps
+      let takenDay = fromDay + 1;
+      let options = {keepPreviousHotel: true};
+      let newArgs = [
+        jakub,
+        hotelAccount,
+        accounts,
+        takenDay,
+        daysAmount,
+        unitPrice,
+        options
+      ];
+
+      const { hotel, token, success } = await help.bookInstantly(...newArgs);
+      const allowance = await token.allowance(augusto, hotel.address);
+
+      assert.equal(success, false);
+      assert.equal(allowance.toNumber(), 0);
+    });
+
+    it('should throw if the approval is too low to execute the transfer', async () => {
+      let options = {approvalValue: 0}
+      args.push(options);
+
+      const { hotel, token, success } = await help.bookInstantly(...args);
+      const allowance = await token.allowance(augusto, hotel.address);
+
+      assert.equal(success, false);
+      assert.equal(allowance.toNumber(), 0);
+    });
+
+    it.skip('should clear allowances in excess of the room cost');
+  });
+
+  describe('reservations', function(){
+    let events;
+    let hash;
+    let args;
+    const fromDay = 60;
+    const daysAmount = 5;
+    const unitPrice = 1;
+
+    // Add a unit that accepts instant booking, execute a token.transferData booking
+    beforeEach(async function() {
+      args = [
+        augusto,
+        hotelAccount,
+        accounts,
+        fromDay,
+        daysAmount,
+        unitPrice
       ];
 
       ({ events, hash, unit } = await help.bookInstantly(...args));
@@ -49,17 +124,19 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     });
 
     it('should make a res that starts on the day a previous res ends', async () => {
-      const nextFrom = fromDay + daysAmount;
-      const nextAmount = 2;
-      const args = [
+      let nextFrom = fromDay + daysAmount;
+      let nextAmount = 2;
+      let options = {keepPreviousHotel: true};
+      let newArgs = [
         jakub,
         hotelAccount,
         accounts,
         nextFrom,
         nextAmount,
-        price
+        unitPrice,
+        options
       ];
-      ({ unit } = await help.bookInstantly(...args));
+      const { unit } = await help.bookInstantly(...newArgs);
 
       const range = _.range(nextFrom, nextFrom + nextAmount);
       for (let day of range) {
@@ -69,76 +146,58 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     })
 
     it('should throw if zero days are reserved', async () => {
-      const nextFrom = fromDay + daysAmount;
-      const nextAmount = 0;
-      const args = [
+      let nextFrom = fromDay + daysAmount;
+      let nextAmount = 0;
+      let newArgs = [
         jakub,
         hotelAccount,
         accounts,
         nextFrom,
         nextAmount,
-        price
+        unitPrice
       ];
 
-      try {
-        await help.bookInstantly(...args);
-        assert(false);
-      } catch (e) {
-        help.isInvalidOpcodeEx(e);
-      }
+      const { success } = await help.bookInstantly(...newArgs);
+      assert.equal(success, false);
     });
 
     it('should should throw if any of the days requested are already reserved', async () => {
-      const takenDay = fromDay + 1;
-      const args = [
+      let takenDay = fromDay + 1;
+      let options = {keepPreviousHotel: true};
+      let newArgs = [
         jakub,
         hotelAccount,
         accounts,
         takenDay,
         daysAmount,
-        price
+        unitPrice,
+        options
       ];
 
-      try {
-        await help.bookInstantly(...args);
-        assert(false);
-      } catch (e) {
-        help.isInvalidOpcodeEx(e);
-      }
+      const { success } = await help.bookInstantly(...newArgs);
+      assert.equal(success, false);
+    })
+
+    // This requires more setup work.....
+    it('should throw if the requested unit does not exist', async() => {
+      let options = {badUnit: true};
+      let newArgs = [
+        augusto,
+        hotelAccount,
+        accounts,
+        fromDay,
+        daysAmount,
+        unitPrice,
+        options
+      ];
+
+      const { success } = await help.bookInstantly(...newArgs);
+      assert.equal(success, false);
     })
 
     // This needs:
     // Contract logic about the current date.
     // Combing through the helpers and tests to remove '60' and provide an accurate date.
-    it.skip('should throw when reserving dates in the past', async() => {
-
-    });
-  });
-
-  describe.skip('instant payment with token', async () => {
-
-    it('should transfer tokens from client account to the hotel account', async () => {
-
-    });
-
-    it('should revert the clients approval if the call fails', async () => {
-
-    });
-
-    it('should throw if the client does not use approveData to make an instant booking', async() => {
-
-    });
-
-    it('should throw if the client uses approveData and `waitConfirmation` is true', async() => {
-
-    });
-
-    it('should check the allowance and throw if the approval is less than the price', async() => {
-
-    });
-
-    it('should throw if the final transferFrom fails', async() => {
-
-    });
+    it.skip('should throw when reserving dates in the past');
   });
 });

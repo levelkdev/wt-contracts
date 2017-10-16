@@ -26,8 +26,7 @@ abiDecoder.addABI(WTIndex._json.abi);
  * @param  {String}   tokenOp          'approveData' || 'transferData' || 'transferDataFrom'
  * @param  {Array}    accounts         The truffle contract accounts
  * @param  {Code}     passThroughData  call data to be executed in the Book drop through.
- * @param  {String}   userInfo         hex string: useful for non-duplicate calls
- * @param  {Address}  reciever         optional: `to` parameter for transferDataFrom method
+ * @param  {Object}   options          flags that trigger various error conditions in the call seq.
  * @return {Object}
  * @example
  *   const result = {
@@ -55,25 +54,44 @@ async function runBeginCall(
   tokenOp,
   accounts,
   passThroughData,
-  _userInfo,
-  receiver
+  options
 ){
-  const userInfo = _userInfo || web3.toHex('user info');
 
+  const wtIndex = await WTIndex.at(await hotel.owner());
+
+  // Options: userInfo?
+  let userInfo;
+  (!options || options && !options.userInfo)
+    ? userInfo = web3.toHex('user info')
+    : userInfo = options.userInfo;
+
+  // Options: unit price?
+  if (!options || options && !options.keepPreviousHotel){
+    const setPriceData = unit.contract.setDefaultLifTokenPrice.getData(price);
+    const callUnitData = hotel.contract.callUnit.getData(unit.address, setPriceData);
+    await wtIndex.callHotel(0, callUnitData, {from: (await hotel.manager())});
+  }
+
+  // Options: approval value?
+  let value;
+  (!options || options && options.approvalValue === undefined)
+    ? value = await unit.getPrice(fromDay, daysAmount)
+    : value = options.approvalValue
+
+  // Options: zombie unit?
+  if (options && options.badUnit){
+    unit = Unit.new(hotel.address, web3.toHex('BASIC_ROOM'), {from: accounts[5]});
+  }
+
+  // Run crowdsale
   const crowdsale = await simulateCrowdsale(100000000000, [40,30,20,10,0], accounts, 1);
   const token = LifToken.at(await crowdsale.token.call());
-  const wtIndex = await WTIndex.at(await hotel.owner());
   await wtIndex.setLifToken(token.address);
 
   const hotelInitialBalance = await token.balanceOf(hotel.address);
   const clientInitialBalance = await token.balanceOf(client);
 
-  const setPriceData = unit.contract.setDefaultLifTokenPrice.getData(price);
-  const callUnitData = hotel.contract.callUnit.getData(unit.address, setPriceData);
-  await wtIndex.callHotel(0, callUnitData, {from: (await hotel.manager())});
-
-  const value = await unit.getPrice(fromDay, daysAmount);
-
+  // Compose token call
   const bookData = hotel.contract.book.getData(unit.address, client, fromDay, daysAmount, passThroughData);
   const beginCallData = hotel.contract.beginCall.getData(bookData, userInfo);
 
@@ -83,11 +101,22 @@ async function runBeginCall(
     'transferDataFrom': async () => await token.transferDataFrom(hotel.address, receiver, value, beginCallData, {from: client})
   };
 
-  const tx = await tokenOpCalls[tokenOp]();
+  // Execute
+  let events;
+  let callStarted;
+  let dataHashTopic;
+  let success = false;
+  let tx;
 
-  const events = abiDecoder.decodeLogs(tx.receipt.logs);
-  const callStarted = events.filter(item => item && item.name === 'CallStarted')[0];
-  const dataHashTopic = callStarted.events.filter(item => item.name === 'dataHash')[0];
+  try {
+    tx = await tokenOpCalls[tokenOp]();
+    events = abiDecoder.decodeLogs(tx.receipt.logs);
+    callStarted = events.filter(item => item && item.name === 'CallStarted')[0];
+    dataHashTopic = callStarted.events.filter(item => item.name === 'dataHash')[0];
+    success = true;
+  } catch (e) {
+    success = false;
+  }
 
   return {
     userInfo: userInfo,
@@ -99,7 +128,8 @@ async function runBeginCall(
     beginCallData: beginCallData,
     transaction: tx,
     events: events,
-    hash: dataHashTopic.value
+    hash: dataHashTopic ? dataHashTopic.value : null,
+    success: success
   }
 }
 

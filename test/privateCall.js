@@ -231,25 +231,6 @@ contract('PrivateCall', function(accounts) {
       } = await help.runBeginCall(...defaultCallArgs));
     });
 
-    it('fires an Approval event and does not fire a Book event', async function(){
-      const approvalEvents = events.filter(item => item && item.name === 'Approval');
-      const bookEvents = events.filter(item => item && item.name === 'Book');
-
-      assert.equal(approvalEvents.length, 1);
-      assert.equal(bookEvents.length, 0);
-    });
-
-    it('PendingCall success flag is false on failure', async function(){
-      const [
-        callData,
-        sender,
-        approved,
-        success
-      ] = await hotel.pendingCalls.call(hash);
-
-      assert.equal(success, false);
-    });
-
     // This test makes this verifiable by coverage.
     it('fromSelf modifier throws on indirect calls', async function(){
       const bookData = hotel.contract.book.getData(unit.address, augusto, 60, 5, stubData);

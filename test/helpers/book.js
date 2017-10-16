@@ -21,9 +21,31 @@ async function initializeHotel(hotelAccount){
   stubData = index.contract.getHotels.getData();
 }
 
-async function bookInstantly(client, hotelAccount, accounts, fromDay, daysAmount, unitPrice) {
-  await initializeHotel(hotelAccount);
-  const unit = await hotelLib.addUnitToHotel(index, hotel, typeName, hotelAccount, false);
+async function bookInstantly(
+  client,
+  hotelAccount,
+  accounts,
+  fromDay,
+  daysAmount,
+  unitPrice,
+  options
+) {
+
+  // Options: require confirmation?
+  (!options || options && !options.requireConfirmation)
+    ? confirmation = false
+    : confirmation = true;
+
+  // Options: token method?
+  (!options || options && !options.tokenMethod)
+    ? tokenMethod = 'approveData'
+    : tokenMethod = options.tokenMethod;
+
+  // Options: keep previous hotel / perform a subsequent booking?
+  if (!options || options && !options.keepPreviousHotel){
+    await initializeHotel(hotelAccount);
+    unit = await hotelLib.addUnitToHotel(index, hotel, typeName, hotelAccount, confirmation);
+  }
 
   const args = [
     hotel,
@@ -32,9 +54,10 @@ async function bookInstantly(client, hotelAccount, accounts, fromDay, daysAmount
     fromDay,
     daysAmount,
     unitPrice,
-    'approveData',
+    tokenMethod,
     accounts,
-    stubData
+    stubData,
+    options
   ];
   const result = await privateCallLib.runBeginCall(...args);
 

@@ -76,6 +76,7 @@ contract PrivateCall is Ownable {
       if (this.call(pendingCalls[msgDataHash].callData))
         pendingCalls[msgDataHash].success = true;
       CallFinish(pendingCalls[msgDataHash].sender, msgDataHash);
+      require(pendingCalls[msgDataHash].success);
     }
   }
 

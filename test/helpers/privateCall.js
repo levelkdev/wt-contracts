@@ -43,7 +43,7 @@ abiDecoder.addABI(WTIndex._json.abi);
  *     userInfo,            // hex private data to the begin call: useful for testing error cases
  *     value                // number value of approval or transfer: 10e9
  *
- *   } = await help.runBeginCall(unit, augusto, 'approveData', accounts, getUnitsLengthData)
+ *   } = await help.runBeginCall(hotel, unit, augusto, 60, 5, 1, 'approveData', accounts, lengthData)
  */
 async function runBeginCall(
   hotel,

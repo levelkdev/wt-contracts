@@ -440,7 +440,7 @@ contract('Hotel', function(accounts) {
       unitInterface = await UnitInterface.at(unit.address);
     });
 
-    it.only('should execute a call on a Unit', async function(){
+    it('should execute a call on a Unit', async function(){
       setPriceData = unitInterface.contract.setSpecialPrice.getData(price, fromDay, daysAmount);
       callUnitData = wtHotel.contract.callUnit.getData(unit.address, setPriceData);
       await wtIndex.callHotel(0, callUnitData, {from: hotelAccount});
@@ -451,7 +451,7 @@ contract('Hotel', function(accounts) {
     });
 
     it('should fail if a non-owner calls the Unit', async function(){
-      setPriceData = unitInterface.contract.setPrice.getData(price, fromDay, daysAmount);
+      setPriceData = unitInterface.contract.setSpecialPrice.getData(price, fromDay, daysAmount);
       callUnitData = wtHotel.contract.callUnit.getData(unit.address, setPriceData);
 
       try {
@@ -464,7 +464,7 @@ contract('Hotel', function(accounts) {
 
     it('should fail if the Unit is not listed in the Hotels index of Units', async function(){
       const unknownUnit = await Unit.new(wtHotel.address, typeNameHex, {from: hotelAccount});
-      setPriceData = unitInterface.contract.setPrice.getData(price, fromDay, daysAmount);
+      setPriceData = unitInterface.contract.setSpecialPrice.getData(price, fromDay, daysAmount);
       callUnitData = wtHotel.contract.callUnit.getData(unknownUnit.address, setPriceData);
 
       try {

@@ -73,10 +73,9 @@ contract PrivateCall is Ownable {
     );
     CallStarted( tx.origin, msgDataHash);
     if (!waitConfirmation){
-      if (this.call(pendingCalls[msgDataHash].callData))
-        pendingCalls[msgDataHash].success = true;
+      require(this.call(pendingCalls[msgDataHash].callData));
+      pendingCalls[msgDataHash].success = true;
       CallFinish(pendingCalls[msgDataHash].sender, msgDataHash);
-      require(pendingCalls[msgDataHash].success);
     }
   }
 
@@ -91,8 +90,8 @@ contract PrivateCall is Ownable {
 
     pendingCalls[msgDataHash].approved = true;
 
-    if (this.call(pendingCalls[msgDataHash].callData))
-      pendingCalls[msgDataHash].success = true;
+    require(this.call(pendingCalls[msgDataHash].callData));
+    pendingCalls[msgDataHash].success = true;
 
     CallFinish(pendingCalls[msgDataHash].sender, msgDataHash);
 

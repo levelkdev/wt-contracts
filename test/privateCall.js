@@ -325,7 +325,12 @@ contract('PrivateCall', function(accounts) {
       defaultCallArgs[dataArgPos] = nullData;
 
       ({ hash } = await help.runBeginCall(...defaultCallArgs));
-      await help.runContinueCall(index, hotel, hotelAccount, hash);
+      try {
+        await help.runContinueCall(index, hotel, hotelAccount, hash);
+        assert(false);
+      } catch(e) {
+        assert(help.isInvalidOpcodeEx);
+      }
 
       const [
         callData,

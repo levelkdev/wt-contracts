@@ -80,12 +80,12 @@ async function runBeginCall(
 
   // Options: zombie unit?
   if (options && options.badUnit){
-    unit = Unit.new(hotel.address, web3.toHex('BASIC_ROOM'), {from: accounts[5]});
+    unit = await Unit.new(hotel.address, web3.toHex('BASIC_ROOM'), {from: accounts[5]});
   }
 
   // Run crowdsale
   const crowdsale = await simulateCrowdsale(100000000000, [40,30,20,10,0], accounts, 1);
-  const token = LifToken.at(await crowdsale.token.call());
+  const token = await LifToken.at(await crowdsale.token.call());
   await wtIndex.setLifToken(token.address);
 
   const hotelInitialBalance = await token.balanceOf(hotel.address);

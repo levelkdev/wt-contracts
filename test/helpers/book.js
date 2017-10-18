@@ -3,12 +3,14 @@ const hotelLib = require('./hotel');
 
 const WTHotel = artifacts.require('Hotel.sol')
 const WTIndex = artifacts.require('WTIndex.sol');
+const DateTime = artifacts.require('DateTime.sol');
 const LifToken = artifacts.require('LifToken.sol');
 const Unit = artifacts.require('Unit.sol')
 
 const typeName = 'BASIC_ROOM';
 
 let index;
+let dateTime;
 let hotel;
 let unitType;
 let stubData;
@@ -16,6 +18,8 @@ let accounts;
 
 async function initializeHotel(hotelAccount){
   index = await WTIndex.new();
+  dateTime = await DateTime.new();
+  await index.setDateTime(dateTime.address);
   hotel = await hotelLib.createHotel(index, hotelAccount);
   unitType = await hotelLib.addUnitTypeToHotel(index, hotel, typeName, hotelAccount);
   stubData = index.contract.getHotels.getData();
@@ -26,6 +30,7 @@ async function bookInstantly(
   hotelAccount,
   accounts,
   fromDay,
+  fromDayTimestamp,
   daysAmount,
   unitPrice,
   options
@@ -52,6 +57,7 @@ async function bookInstantly(
     unit,
     client,
     fromDay,
+    fromDayTimestamp,
     daysAmount,
     unitPrice,
     tokenMethod,

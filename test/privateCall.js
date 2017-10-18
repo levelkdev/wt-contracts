@@ -32,6 +32,10 @@ contract('PrivateCall', function(accounts) {
   let fromDate;
   let fromDayTimestamp;
 
+  before(async function() {
+    dateTime = await DateTime.new();
+  });
+
   // Create and register a hotel
   beforeEach( async function(){
     block = await web3.eth.getBlock("latest");
@@ -40,10 +44,7 @@ contract('PrivateCall', function(accounts) {
     fromDay = fromDate.diff(moment(), 'days');
     fromDayTimestamp = fromDate.unix();
 
-    index = await WTIndex.new();
-    dateTime = await DateTime.new();
-    await index.setDateTime(dateTime.address);
-
+    index = await WTIndex.new(dateTime.address);
     hotel = await help.createHotel(index, hotelAccount);
     unitType = await help.addUnitTypeToHotel(index, hotel, typeName, hotelAccount);
     stubData = index.contract.getHotels.getData();

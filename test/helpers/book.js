@@ -17,9 +17,8 @@ let stubData;
 let accounts;
 
 async function initializeHotel(hotelAccount){
-  index = await WTIndex.new();
   dateTime = await DateTime.new();
-  await index.setDateTime(dateTime.address);
+  index = await WTIndex.new(dateTime.address);
   hotel = await hotelLib.createHotel(index, hotelAccount);
   unitType = await hotelLib.addUnitTypeToHotel(index, hotel, typeName, hotelAccount);
   stubData = index.contract.getHotels.getData();

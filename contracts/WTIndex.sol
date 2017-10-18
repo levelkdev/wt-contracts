@@ -46,8 +46,11 @@ contract WTIndex is Ownable {
 
   /**
      @dev Constructor. Creates the `WTIndex` contract
+
+     @param _DateTime Address of the DateTime utility contract
    */
-	function WTIndex() {
+	function WTIndex(address _DateTime) {
+    DateTime = _DateTime;
 		hotels.length ++;
 	}
 

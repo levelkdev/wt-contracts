@@ -8,7 +8,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
   const jakub = accounts[3];
   const typeName = 'BASIC_ROOM';
   let fromDate;
-  let fromDayTimestamp;
   let fromDay;
   let block;
 
@@ -25,7 +24,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       fromDate = moment.unix(block.timestamp);
       fromDate.add(daysFromNow, 'days');
       fromDay = fromDate.diff(moment(0), 'days');
-      fromDayTimestamp = fromDate.unix();
     })
 
     // Add a unit that accepts instant booking, execute a token.transferData booking
@@ -36,7 +34,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
         hotelAccount,
         accounts,
         fromDay,
-        fromDayTimestamp,
         daysAmount,
         unitPrice
       ];
@@ -67,7 +64,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     it('should make a res that starts on the day a previous res ends', async () => {
       let nextDate = moment(fromDate).add(daysAmount, 'days');
       let nextFrom = nextDate.diff(moment(0), 'days');
-      let nextTimeStamp = nextDate.unix();
       let nextAmount = 2;
       let options = {keepPreviousHotel: true};
       let newArgs = [
@@ -75,7 +71,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
         hotelAccount,
         accounts,
         nextFrom,
-        nextTimeStamp,
         nextAmount,
         unitPrice,
         options
@@ -92,14 +87,12 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     it('should throw if zero days are reserved', async () => {
       let nextDate = moment(fromDate).add(daysAmount, 'months');
       let nextFrom = nextDate.diff(moment(0), 'days');
-      let nextTimeStamp = nextDate.unix();
       let nextAmount = 0;
       let newArgs = [
         jakub,
         hotelAccount,
         accounts,
         nextFrom,
-        nextTimeStamp,
         nextAmount,
         unitPrice
       ];
@@ -111,14 +104,12 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     it('should should throw if any of the days requested are already reserved', async () => {
       let nextDate = moment(fromDate).add(1, 'days');
       let nextFrom = nextDate.diff(moment(0), 'days');
-      let nextTimeStamp = nextDate.unix();
       let options = {keepPreviousHotel: true};
       let newArgs = [
         jakub,
         hotelAccount,
         accounts,
         nextFrom,
-        nextTimeStamp,
         daysAmount,
         unitPrice,
         options
@@ -136,7 +127,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
         hotelAccount,
         accounts,
         fromDay,
-        fromDayTimestamp,
         daysAmount,
         unitPrice,
         options
@@ -152,14 +142,12 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     it('should throw when reserving dates in the past', async() => {
       let pastDate = moment(fromDate).subtract(1, 'months');
       let nextFrom = pastDate.diff(moment(0), 'days');
-      let nextTimeStamp = pastDate.unix();
       let nextAmount = 2;
       let newArgs = [
         augusto,
         hotelAccount,
         accounts,
         nextFrom,
-        nextTimeStamp,
         daysAmount,
         unitPrice
       ];
@@ -180,7 +168,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       fromDate = moment.unix(block.timestamp);
       fromDate.add(daysFromNow, 'days');
       fromDay = fromDate.diff(moment(0), 'days');
-      fromDayTimestamp = fromDate.unix();
     })
 
     beforeEach(function() {
@@ -189,7 +176,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
         hotelAccount,
         accounts,
         fromDay,
-        fromDayTimestamp,
         daysAmount,
         unitPrice,
       ];
@@ -221,14 +207,12 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       // Make another booking that overlaps
       let takenDate = moment(fromDate).add(1, 'days');
       let nextFrom = takenDate.diff(moment(0), 'days');
-      let nextTimeStamp = takenDate.unix();
       let options = {keepPreviousHotel: true};
       let newArgs = [
         jakub,
         hotelAccount,
         accounts,
         nextFrom,
-        nextTimeStamp,
         daysAmount,
         unitPrice,
         options

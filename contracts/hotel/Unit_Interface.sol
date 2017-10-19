@@ -22,6 +22,6 @@ contract Unit_Interface is Ownable {
   function setDateTime(address _date) onlyOwner();
   function setSpecialPrice(string price, uint fromDay, uint daysAmount) onlyOwner();
   function setDefaultLifTokenPrice(uint256 price) onlyOwner();
-  function book(address from, uint fromDay, uint fromDayTimestamp, uint daysAmount) onlyOwner() returns(bool);
+  function book(address from, uint fromDay, uint daysAmount) onlyOwner() returns(bool);
 
 }

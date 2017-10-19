@@ -24,7 +24,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       block = await web3.eth.getBlock("latest");
       fromDate = moment.unix(block.timestamp);
       fromDate.add(daysFromNow, 'days');
-      fromDay = fromDate.diff(moment(), 'days');
+      fromDay = fromDate.diff(moment(0), 'days');
       fromDayTimestamp = fromDate.unix();
     })
 
@@ -66,7 +66,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
 
     it('should make a res that starts on the day a previous res ends', async () => {
       let nextDate = moment(fromDate).add(daysAmount, 'days');
-      let nextFrom = nextDate.diff(moment(), 'days');
+      let nextFrom = nextDate.diff(moment(0), 'days');
       let nextTimeStamp = nextDate.unix();
       let nextAmount = 2;
       let options = {keepPreviousHotel: true};
@@ -91,7 +91,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
 
     it('should throw if zero days are reserved', async () => {
       let nextDate = moment(fromDate).add(daysAmount, 'months');
-      let nextFrom = nextDate.diff(moment(), 'days');
+      let nextFrom = nextDate.diff(moment(0), 'days');
       let nextTimeStamp = nextDate.unix();
       let nextAmount = 0;
       let newArgs = [
@@ -110,7 +110,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
 
     it('should should throw if any of the days requested are already reserved', async () => {
       let nextDate = moment(fromDate).add(1, 'days');
-      let nextFrom = nextDate.diff(moment(), 'days');
+      let nextFrom = nextDate.diff(moment(0), 'days');
       let nextTimeStamp = nextDate.unix();
       let options = {keepPreviousHotel: true};
       let newArgs = [
@@ -151,7 +151,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     // Combing through the helpers and tests to remove '60' and provide an accurate date.
     it('should throw when reserving dates in the past', async() => {
       let pastDate = moment(fromDate).subtract(1, 'months');
-      let nextFrom = pastDate.diff(moment(), 'days');
+      let nextFrom = pastDate.diff(moment(0), 'days');
       let nextTimeStamp = pastDate.unix();
       let nextAmount = 2;
       let newArgs = [
@@ -179,7 +179,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       block = await web3.eth.getBlock("latest");
       fromDate = moment.unix(block.timestamp);
       fromDate.add(daysFromNow, 'days');
-      fromDay = fromDate.diff(moment(), 'days');
+      fromDay = fromDate.diff(moment(0), 'days');
       fromDayTimestamp = fromDate.unix();
     })
 
@@ -220,7 +220,7 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
 
       // Make another booking that overlaps
       let takenDate = moment(fromDate).add(1, 'days');
-      let nextFrom = takenDate.diff(moment(), 'days');
+      let nextFrom = takenDate.diff(moment(0), 'days');
       let nextTimeStamp = takenDate.unix();
       let options = {keepPreviousHotel: true};
       let newArgs = [

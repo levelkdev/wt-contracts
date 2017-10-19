@@ -19,6 +19,7 @@ contract('PrivateCall', function(accounts) {
   const daysAmount = 5;
   const price = 1;
   const unitArgPos = 1;
+  const fromDayPos = 3;
   const dataArgPos = 9;
 
   let defaultCallArgs;
@@ -41,7 +42,7 @@ contract('PrivateCall', function(accounts) {
     block = await web3.eth.getBlock("latest");
     fromDate = moment.unix(block.timestamp);
     fromDate.add(1, 'days');
-    fromDay = fromDate.diff(moment(), 'days');
+    fromDay = fromDate.diff(moment(0), 'days');
     fromDayTimestamp = fromDate.unix();
 
     index = await WTIndex.new(dateTime.address);
@@ -146,7 +147,7 @@ contract('PrivateCall', function(accounts) {
     // We've already begun and indentical call in the beforeEach block. Smart token requires
     // that the call succeeds, so approveData will also throw.
     it('should throw if call is duplicate', async function() {
-      const bookData = hotel.contract.book.getData(unit.address, augusto, fromDay, fromDayTimestamp, 5, stubData);
+      const bookData = hotel.contract.book.getData(unit.address, augusto, fromDay, fromDayTimestamp, 5);
       const beginCall = hotel.contract.beginCall.getData(bookData, userInfo);
 
       try {
@@ -249,7 +250,7 @@ contract('PrivateCall', function(accounts) {
 
     // This test makes this verifiable by coverage.
     it('fromSelf modifier throws on indirect calls', async function(){
-      const bookData = hotel.contract.book.getData(unit.address, augusto, fromDay, fromDayTimestamp, 5, stubData);
+      const bookData = hotel.contract.book.getData(unit.address, augusto, fromDay, fromDayTimestamp, 5);
       try {
         await index.callHotel(0, bookData, {from: hotelAccount});
         assert(false);
@@ -337,8 +338,9 @@ contract('PrivateCall', function(accounts) {
 
     // Passing book a null Data call will cause the finalCall to fail...
     it('PendingCalls success flag should be false if final call fails', async function(){
-      const nullData = '0x00';
-      defaultCallArgs[dataArgPos] = nullData;
+      let pastDate = moment(fromDate);
+      pastDate.subtract(1, 'months');
+      defaultCallArgs[fromDayPos] = pastDate.diff(moment(0), 'days');
 
       ({ hash } = await help.runBeginCall(...defaultCallArgs));
       try {

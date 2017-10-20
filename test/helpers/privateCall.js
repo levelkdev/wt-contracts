@@ -90,7 +90,7 @@ async function runBeginCall(
   const clientInitialBalance = await token.balanceOf(client);
 
   // Compose token call
-  const bookData = hotel.contract.book.getData(unit.address, client, fromDay, daysAmount);
+  const bookData = hotel.contract.bookWithLif.getData(unit.address, client, fromDay, daysAmount);
   const beginCallData = hotel.contract.beginCall.getData(bookData, userInfo);
 
   const tokenOpCalls = {

@@ -239,4 +239,71 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
     it.skip('should clear allowances in excess of the room cost');
   });
 
+  describe('manual payment, without token', async function(){
+    let events;
+    let hash;
+    let hotel;
+    let index;
+    let unit;
+    let args;
+    const daysAmount = 5;
+    const daysFromNow = 1;
+    const unitPrice = 0;
+
+    // Add a unit that requires approval
+    before(async function() {
+      block = await web3.eth.getBlock("latest");
+      fromDate = moment.unix(block.timestamp);
+      fromDate.add(daysFromNow, 'days');
+      fromDay = fromDate.diff(moment(0), 'days');
+
+      let options = {bookMethod: 'book', requireConfirmation: true, approvalValue: 1};
+      args = [
+        augusto,
+        hotelAccount,
+        accounts,
+        fromDay,
+        daysAmount,
+        unitPrice,
+        options
+      ];
+
+      ({ events, hash, hotel, index, unit } = await help.bookInstantly(...args));
+    });
+
+    it('should NOT make a reservation or fire a Book event before manager confirms', async () => {
+      const range = _.range(fromDay, fromDay + daysAmount);
+
+      for (let day of range) {
+        const [ specialPrice, bookedBy ] = await unit.getReservation(day);
+        assert.notEqual(bookedBy, augusto);
+      }
+
+      const bookEvent = events.filter(item => item && item.name === 'Book')[0];
+
+      assert(!bookEvent);
+    });
+
+    it('should make a reservation and fire Book event after manager confirms', async () => {
+      ({ events } = await help.runContinueCall(index, hotel, hotelAccount, hash));
+
+      const range = _.range(fromDay, fromDay + daysAmount);
+
+      for (let day of range) {
+        const [ specialPrice, bookedBy ] = await unit.getReservation(day);
+        assert.equal(bookedBy, augusto);
+      }
+
+      const bookEvent = events.filter(item => item && item.name === 'Book')[0].events;
+      const fromTopic = bookEvent.filter(item => item && item.name === 'from')[0];
+      const fromDayTopic = bookEvent.filter(item => item && item.name === 'fromDay')[0];
+      const daysAmountTopic = bookEvent.filter(item => item && item.name === 'daysAmount')[0];
+
+      assert.equal(fromTopic.value, augusto);
+      assert.equal(fromDayTopic.value, fromDay);
+      assert.equal(daysAmountTopic.value, daysAmount);
+    })
+
+  });
+
 });

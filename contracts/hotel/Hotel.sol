@@ -215,6 +215,25 @@ contract Hotel is PrivateCall, Images {
   }
 
   /**
+     @dev `book` allows the contract to execute a book function itself
+
+     @param unitAddress The address of the `Unit` contract
+     @param from The address of the opener of the reservation
+     @param fromDay The starting day of the period of days to book
+     @param daysAmount The amount of days in the booking period
+   */
+  function book(
+    address unitAddress,
+    address from,
+    uint fromDay,
+    uint daysAmount
+  ) fromSelf() {
+    require(unitsIndex[unitAddress] > 0);
+    require(daysAmount > 0);
+    require(Unit_Interface(unitAddress).book(from, fromDay, daysAmount));
+  }
+
+  /**
      @dev `bookWithLif` allows the contract to execute a book function itself
 
      @param unitAddress The address of the `Unit` contract

@@ -47,6 +47,7 @@ contract('PrivateCall', function(accounts) {
       daysAmount,
       price,
       'approveData',
+      'bookWithLif',
       accounts
     ];
   });

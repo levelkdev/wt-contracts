@@ -102,7 +102,7 @@ async function runBeginCall(
     'bookWithLif': hotel.contract.bookWithLif.getData(unit.address, client, fromDay, daysAmount),
     'book': hotel.contract.book.getData(unit.address, client, fromDay, daysAmount)
   }
-  //const bookData = hotel.contract.bookWithLif.getData(unit.address, client, fromDay, daysAmount);
+
   const beginCallData = hotel.contract.beginCall.getData(bookData[bookOp], userInfo);
 
   const tokenOpCalls = {

@@ -136,9 +136,6 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       assert.equal(success, false);
     })
 
-    // This needs:
-    // Contract logic about the current date.
-    // Combing through the helpers and tests to remove '60' and provide an accurate date.
     it('should throw when reserving dates in the past', async() => {
       let pastDate = moment(fromDate).subtract(1, 'months');
       let nextFrom = pastDate.diff(moment(0), 'days');
@@ -302,7 +299,79 @@ contract('Hotel / PrivateCall: bookings', function(accounts) {
       assert.equal(fromTopic.value, augusto);
       assert.equal(fromDayTopic.value, fromDay);
       assert.equal(daysAmountTopic.value, daysAmount);
-    })
+    });
+
+    it('should throw when reserving dates in the past', async() => {
+      let options = {bookMethod: 'book', requireConfirmation: true, approvalValue: 1, keepPreviousHotel: true};
+      let pastDate = moment(fromDate).subtract(1, 'months');
+      let nextFrom = pastDate.diff(moment(0), 'days');
+      let nextAmount = 2;
+      let newArgs = [
+        augusto,
+        hotelAccount,
+        accounts,
+        nextFrom,
+        daysAmount,
+        unitPrice,
+        options
+      ];
+
+      ({ events, hash, hotel, index, unit } = await help.bookInstantly(...newArgs));
+
+      try {
+        await help.runContinueCall(index, hotel, hotelAccount, hash);
+        assert(false);
+      } catch (e){
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should throw if the requested unit does not exist', async() => {
+      let options = {bookMethod: 'book', requireConfirmation: true, approvalValue: 1, badUnit: true};
+      let newArgs = [
+        augusto,
+        hotelAccount,
+        accounts,
+        fromDay,
+        daysAmount,
+        unitPrice,
+        options
+      ];
+
+      ({ events, hash, hotel, index, unit } = await help.bookInstantly(...newArgs));
+
+      try {
+        await help.runContinueCall(index, hotel, hotelAccount, hash);
+        assert(false);
+      } catch (e){
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should throw if zero days are reserved', async () => {
+      let options = {bookMethod: 'book', requireConfirmation: true, approvalValue: 1};
+      let nextDate = moment(fromDate).add(daysAmount, 'months');
+      let nextFrom = nextDate.diff(moment(0), 'days');
+      let nextAmount = 0;
+      let newArgs = [
+        augusto,
+        hotelAccount,
+        accounts,
+        nextFrom,
+        nextAmount,
+        unitPrice,
+        options
+      ];
+
+      ({ events, hash, hotel, index, unit } = await help.bookInstantly(...newArgs));
+
+      try {
+        await help.runContinueCall(index, hotel, hotelAccount, hash);
+        assert(false);
+      } catch (e){
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
 
   });
 

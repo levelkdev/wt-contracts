@@ -19,7 +19,13 @@ contract Unit is Ownable {
   bool public active;
 
   // The default price for the Unit in LifTokens
-  uint256 public defaultLifTokenPrice;
+  uint256 public defaultLifPrice;
+
+  // Currency code for the custom price
+  bytes8 public currencyCode;
+
+  // Default price in custom currency (10000 = 100.00)
+  uint256 public defaultPrice;
 
   /*
      Mapping of reservations, indexed by date represented by number of days
@@ -27,7 +33,8 @@ contract Unit is Ownable {
   */
   mapping(uint => UnitDay) reservations;
   struct UnitDay {
-    string specialPrice;
+    uint specialPrice;
+    uint specialLifPrice;
     address bookedBy;
   }
 
@@ -57,6 +64,10 @@ contract Unit is Ownable {
     active = _active;
   }
 
+  function setCurrencyCode(bytes8 _currencyCode) onlyOwner() {
+    currencyCode = _currencyCode;
+  }
+
   /**
      @dev `setPrice` allows the owner of the contract to set a price for
      a range of dates
@@ -66,7 +77,7 @@ contract Unit is Ownable {
      @param daysAmount The amount of days in the period
    */
   function setSpecialPrice(
-    string price,
+    uint price,
     uint fromDay,
     uint daysAmount
   ) onlyOwner() {
@@ -75,8 +86,30 @@ contract Unit is Ownable {
       reservations[i].specialPrice = price;
   }
 
-  function setDefaultLifTokenPrice(uint256 price) onlyOwner() {
-    defaultLifTokenPrice = price;
+  /**
+     @dev `setPrice` allows the owner of the contract to set a price for
+     a range of dates
+
+     @param price The price of the unit
+     @param fromDay The starting date of the period of days to change
+     @param daysAmount The amount of days in the period
+   */
+  function setSpecialLifPrice(
+    uint price,
+    uint fromDay,
+    uint daysAmount
+  ) onlyOwner() {
+    uint toDay = fromDay+daysAmount;
+    for (uint i = fromDay; i < toDay; i++)
+      reservations[i].specialLifPrice = price;
+  }
+
+  function setDefaultPrice(uint256 price) onlyOwner() {
+    defaultPrice = price;
+  }
+
+  function setDefaultLifPrice(uint256 price) onlyOwner() {
+    defaultLifPrice = price;
   }
 
   /**
@@ -120,29 +153,48 @@ contract Unit is Ownable {
    */
   function getReservation(
     uint day
-  ) constant returns(string, address) {
+  ) constant returns(uint, uint, address) {
     return (
       reservations[day].specialPrice,
+      reservations[day].specialLifPrice,
       reservations[day].bookedBy
     );
   }
 
-  function getPrice(
+  function getCost(
     uint fromDay,
     uint daysAmount
   ) constant returns(uint256) {
     uint toDay = fromDay+daysAmount;
-    uint totalPrice = 0;
+    uint totalCost = 0;
 
     for (uint i = fromDay; i < toDay ; i++){
-      if (bytes(reservations[i].specialPrice).length != 0) {
-        //TODO: add the specialPrice to total
+      if (reservations[i].specialPrice > 0) {
+        totalCost += reservations[i].specialPrice;
       } else {
-        totalPrice += defaultLifTokenPrice;
+        totalCost += defaultPrice;
       }
     }
 
-    return totalPrice;
+    return totalCost;
+  }
+
+  function getLifCost(
+    uint fromDay,
+    uint daysAmount
+  ) constant returns(uint256) {
+    uint toDay = fromDay+daysAmount;
+    uint totalCost = 0;
+
+    for (uint i = fromDay; i < toDay ; i++){
+      if (reservations[i].specialLifPrice > 0) {
+        totalCost += reservations[i].specialLifPrice;
+      } else {
+        totalCost += defaultLifPrice;
+      }
+    }
+
+    return totalCost;
   }
 
   /**

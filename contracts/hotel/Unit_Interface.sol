@@ -14,13 +14,17 @@ contract Unit_Interface is Ownable {
   event Book(address from, uint fromDay, uint daysAmount);
 
   // Public methods
-  function getReservation(uint day) constant returns(string, address);
-  function getPrice(uint fromDay, uint daysAmount) constant returns(uint256);
+  function getReservation(uint day) constant returns(uint, uint, address);
+  function getCost(uint fromDay, uint daysAmount) constant returns(uint256);
+  function getLifCost(uint fromDay, uint daysAmount) constant returns(uint256);
 
   // Owner methods
   function setActive(bool _active) onlyOwner();
-  function setSpecialPrice(string price, uint fromDay, uint daysAmount) onlyOwner();
-  function setDefaultLifTokenPrice(uint256 price) onlyOwner();
+  function setCurrencyCode(bytes8 _currencyCode) onlyOwner();
+  function setSpecialPrice(uint price, uint fromDay, uint daysAmount) onlyOwner();
+  function setSpecialLifPrice(uint price, uint fromDay, uint daysAmount) onlyOwner();
+  function setDefaultPrice(uint256 price) onlyOwner();
+  function setDefaultLifPrice(uint256 price) onlyOwner();
   function book(address from, uint fromDay, uint daysAmount) onlyOwner() returns(bool);
 
 }

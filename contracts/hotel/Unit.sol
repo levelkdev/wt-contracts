@@ -31,17 +31,17 @@ contract Unit is Ownable {
      Mapping of reservations, indexed by date represented by number of days
      after 01-01-1970
   */
-  mapping(uint => UnitDay) reservations;
+  mapping(uint256 => UnitDay) reservations;
   struct UnitDay {
-    uint specialPrice;
-    uint specialLifPrice;
+    uint256 specialPrice;
+    uint256 specialLifPrice;
     address bookedBy;
   }
 
   /**
      @dev Event triggered on every booking
   **/
-  event Book(address from, uint fromDay, uint daysAmount);
+  event Book(address from, uint256 fromDay, uint256 daysAmount);
 
   /**
      @dev Constructor. Creates the `Unit` contract with an active status
@@ -83,12 +83,12 @@ contract Unit is Ownable {
      @param daysAmount The amount of days in the period
    */
   function setSpecialPrice(
-    uint price,
-    uint fromDay,
-    uint daysAmount
+    uint256 price,
+    uint256 fromDay,
+    uint256 daysAmount
   ) onlyOwner() {
-    uint toDay = fromDay+daysAmount;
-    for (uint i = fromDay; i < toDay; i++)
+    uint256 toDay = fromDay+daysAmount;
+    for (uint256 i = fromDay; i < toDay; i++)
       reservations[i].specialPrice = price;
   }
 
@@ -101,12 +101,12 @@ contract Unit is Ownable {
      @param daysAmount The amount of days in the period
    */
   function setSpecialLifPrice(
-    uint price,
-    uint fromDay,
-    uint daysAmount
+    uint256 price,
+    uint256 fromDay,
+    uint256 daysAmount
   ) onlyOwner() {
-    uint toDay = fromDay+daysAmount;
-    for (uint i = fromDay; i < toDay; i++)
+    uint256 toDay = fromDay+daysAmount;
+    for (uint256 i = fromDay; i < toDay; i++)
       reservations[i].specialLifPrice = price;
   }
 
@@ -141,14 +141,14 @@ contract Unit is Ownable {
    */
   function book(
     address from,
-    uint fromDay,
-    uint daysAmount
+    uint256 fromDay,
+    uint256 daysAmount
   ) onlyOwner() returns(bool) {
     require(isFutureDay(fromDay));
     require(active);
-    uint toDay = fromDay+daysAmount;
+    uint256 toDay = fromDay+daysAmount;
 
-    for (uint i = fromDay; i < toDay ; i++){
+    for (uint256 i = fromDay; i < toDay ; i++){
       if (reservations[i].bookedBy != address(0)) {
         return false;
       }
@@ -165,14 +165,14 @@ contract Unit is Ownable {
 
      @param day The number of days after 01-01-1970
 
-     @return uint The price of the day in the custom currency, 0 if default price
-     @return uint The price of the day in Líf, 0 if default price
+     @return uint256 The price of the day in the custom currency, 0 if default price
+     @return uint256 The price of the day in Líf, 0 if default price
      @return address The address of the owner of the reservation
      returns 0x0 if its available
    */
   function getReservation(
-    uint day
-  ) constant returns(uint, uint, address) {
+    uint256 day
+  ) constant returns(uint256, uint256, address) {
     return (
       reservations[day].specialPrice,
       reservations[day].specialLifPrice,
@@ -189,13 +189,13 @@ contract Unit is Ownable {
      @return uint256 The total cost of the booking in the custom currency
    */
   function getCost(
-    uint fromDay,
-    uint daysAmount
+    uint256 fromDay,
+    uint256 daysAmount
   ) constant returns(uint256) {
-    uint toDay = fromDay+daysAmount;
-    uint totalCost = 0;
+    uint256 toDay = fromDay+daysAmount;
+    uint256 totalCost = 0;
 
-    for (uint i = fromDay; i < toDay ; i++){
+    for (uint256 i = fromDay; i < toDay ; i++){
       if (reservations[i].specialPrice > 0) {
         totalCost += reservations[i].specialPrice;
       } else {
@@ -215,13 +215,13 @@ contract Unit is Ownable {
      @return uint256 The total cost of the booking in Lif
    */
   function getLifCost(
-    uint fromDay,
-    uint daysAmount
+    uint256 fromDay,
+    uint256 daysAmount
   ) constant returns(uint256) {
-    uint toDay = fromDay+daysAmount;
-    uint totalCost = 0;
+    uint256 toDay = fromDay+daysAmount;
+    uint256 totalCost = 0;
 
-    for (uint i = fromDay; i < toDay ; i++){
+    for (uint256 i = fromDay; i < toDay ; i++){
       if (reservations[i].specialLifPrice > 0) {
         totalCost += reservations[i].specialLifPrice;
       } else {
@@ -239,7 +239,7 @@ contract Unit is Ownable {
 
      @return bool If the timestamp is today or in the future
    */
-  function isFutureDay(uint time) internal returns (bool) {
+  function isFutureDay(uint256 time) internal returns (bool) {
     return !(now / 86400 > time);
   }
 

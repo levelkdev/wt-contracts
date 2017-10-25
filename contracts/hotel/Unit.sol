@@ -64,13 +64,19 @@ contract Unit is Ownable {
     active = _active;
   }
 
+  /**
+     @dev `setCurrencyCode` allows the owner of the contract to set which
+     currency other than Líf the Unit is priced in
+
+     @param _currencyCode The hex value of the currency code
+   */
   function setCurrencyCode(bytes8 _currencyCode) onlyOwner() {
     currencyCode = _currencyCode;
   }
 
   /**
-     @dev `setPrice` allows the owner of the contract to set a price for
-     a range of dates
+     @dev `setPrice` allows the owner of the contract to set a speical price in
+     the custom currency for a range of dates
 
      @param price The price of the unit
      @param fromDay The starting date of the period of days to change
@@ -87,8 +93,8 @@ contract Unit is Ownable {
   }
 
   /**
-     @dev `setPrice` allows the owner of the contract to set a price for
-     a range of dates
+     @dev `setSpecialLifPrice` allows the owner of the contract to set a special
+     price in Líf for a range of days
 
      @param price The price of the unit
      @param fromDay The starting date of the period of days to change
@@ -104,10 +110,22 @@ contract Unit is Ownable {
       reservations[i].specialLifPrice = price;
   }
 
+  /**
+     @dev `setDefaultPrice` allows the owner of the contract to set the default
+     price in the custom currency for reserving the Unit for 1 day
+
+     @param price The new default price
+   */
   function setDefaultPrice(uint256 price) onlyOwner() {
     defaultPrice = price;
   }
 
+  /**
+     @dev `setDefaultLifPrice` allows the owner of the contract to set the default
+     price in Lif for reserving the Unit for 1 day
+
+     @param price The new default Lif price
+   */
   function setDefaultLifPrice(uint256 price) onlyOwner() {
     defaultLifPrice = price;
   }
@@ -147,7 +165,8 @@ contract Unit is Ownable {
 
      @param day The number of days after 01-01-1970
 
-     @return string The price of the day
+     @return uint The price of the day in the custom currency, 0 if default price
+     @return uint The price of the day in Líf, 0 if default price
      @return address The address of the owner of the reservation
      returns 0x0 if its available
    */
@@ -161,6 +180,14 @@ contract Unit is Ownable {
     );
   }
 
+  /**
+     @dev `getCost` calculates the cost of renting the Unit for the given dates
+
+     @param fromDay The starting date of the period of days to book
+     @param daysAmount The amount of days in the period
+
+     @return uint256 The total cost of the booking in the custom currency
+   */
   function getCost(
     uint fromDay,
     uint daysAmount
@@ -179,6 +206,14 @@ contract Unit is Ownable {
     return totalCost;
   }
 
+  /**
+     @dev `getLifCost` calculates the cost of renting the Unit for the given dates
+
+     @param fromDay The starting date of the period of days to book
+     @param daysAmount The amount of days in the period
+
+     @return uint256 The total cost of the booking in Lif
+   */
   function getLifCost(
     uint fromDay,
     uint daysAmount

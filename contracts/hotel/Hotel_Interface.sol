@@ -1,12 +1,12 @@
 pragma solidity ^0.4.15;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../PrivateCall.sol";
 
 /*
  * Hotel_Interface
  * Interface of Hotel contract
  */
-contract Hotel_Interface is Ownable {
+contract Hotel_Interface is PrivateCall {
 
   // Main information
   string public name;
@@ -27,11 +27,9 @@ contract Hotel_Interface is Ownable {
   function editInfo(string _name, string _description) onlyOwner();
   function editAddress(string _lineOne, string _lineTwo, string _zip, string _country) onlyOwner() ;
   function editLocation(uint _timezone, uint _longitude, uint _latitude) onlyOwner();
-  function addUnitType(address addr, bytes32 unitType) onlyOwner();
+  function addUnitType(address addr) onlyOwner();
   function removeUnitType(bytes32 unitType, uint index) onlyOwner();
   function changeUnitType(bytes32 unitType, address newAddr) onlyOwner();
-  function addImage(string url) onlyOwner();
-  function removeImage(uint index) onlyOwner();
   function callUnitType(bytes32 unitType, bytes data) onlyOwner();
   function callUnit(address unitAddress, bytes data) onlyOwner();
 

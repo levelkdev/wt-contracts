@@ -12,17 +12,14 @@ contract UnitType_Interface is Ownable {
   uint public totalUnits;
 
   // Owner methods
-  function edit(string description, uint minGuests, uint maxGuests, string price) onlyOwner();
-  function addAmenity(uint amenity) onlyOwner();
-  function removeAmenity( uint amenity) onlyOwner();
-  function addImage(string url) onlyOwner();
-  function removeImage(uint imageIndex) onlyOwner();
-  function removeUnit(uint unitIndex) onlyOwner();
+  function edit(string _description, uint _minGuests, uint _maxGuests, string _price) onlyOwner();
+  function addAmenity(uint amenityId) onlyOwner();
+  function removeAmenity( uint amenityId) onlyOwner();
   function increaseUnits() onlyOwner();
   function decreaseUnits() onlyOwner();
 
   // Public methods
-  function getInfo() constant returns(string, uint, uint, string, bool);
+  function getInfo() constant returns(string, uint, uint, string);
   function getAmenities() constant returns(uint[]);
 
 }

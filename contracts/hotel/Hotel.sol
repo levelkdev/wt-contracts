@@ -6,6 +6,7 @@ import "./UnitType_Interface.sol";
 import "./Unit_Interface.sol";
 import "../Index_Interface.sol";
 import "zeppelin-solidity/contracts/token/ERC20.sol";
+import "./Hotel_Interface.sol";
 
 /**
    @title Hotel, contract for a Hotel registered in the WT network
@@ -19,9 +20,9 @@ import "zeppelin-solidity/contracts/token/ERC20.sol";
    Each individual unit is represented by its own `Unit` contract, whose address
    is stored in the `units` array.
 
-   Inherits from OpenZeppelin's `Ownable` and WT's 'Images'
+   Inherits from WT's 'Images' and 'PrivateCall'
  */
-contract Hotel is PrivateCall, Images {
+contract Hotel is Hotel_Interface, Images {
 
   bytes32 public version = bytes32("0.0.1-alpha");
   bytes32 public contractType = bytes32("hotel");

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./UnitType_Interface.sol";
 import "../Images.sol";
 
  /**
@@ -12,7 +12,7 @@ import "../Images.sol";
 
    Inherits from OpenZeppelin's `Ownable` and WT's 'Images'.
  */
-contract UnitType is Ownable, Images {
+contract UnitType is UnitType_Interface, Images {
 
   bytes32 public version = bytes32("0.0.1-alpha");
   bytes32 public contractType = bytes32("unittype");

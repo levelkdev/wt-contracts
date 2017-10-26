@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./Unit_Interface.sol";
 
  /**
    @title Unit, contract for an individual unit in a Hotel
@@ -8,9 +8,9 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
    A contract that represents an individual unit of a hotel registered in the
    WT network. Tracks the price and availability of this unit.
 
-   Inherits from WT's `PrivateCall`
+   Inherits from OpenZeppelin's `Ownable`
  */
-contract Unit is Ownable {
+contract Unit is Unit_Interface {
 
   bytes32 public version = bytes32("0.0.1-alpha");
   bytes32 public contractType = bytes32("unit");

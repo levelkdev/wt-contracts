@@ -149,24 +149,24 @@ contract('Hotel', function(accounts) {
       assert.isDefined(info.unitTypes[typeName]);
     });
 
-    it('should throw if the added UnitType already exists', async function(){
-      const data = wtHotel.contract.addUnitType.getData(unitType.address);
-      await wtIndex.callHotel(0, data, {from: hotelAccount});
-
-      try {
-        await wtIndex.callHotel(0, data, {from: hotelAccount});
-        assert(false)
-      } catch(e) {
-        assert(help.isInvalidOpcodeEx(e));
-      }
-    });
-
     it('should throw if not executed by owner', async function() {
       try {
         const unitType2 = await UnitType.new(
           wtHotel.address, web3.toHex('FANCY_ROOM'), {from: hotelAccount}
         );
         await wtHotel.addUnitType(unitType2.address, {from: nonOwnerAccount});
+        assert(false)
+      } catch(e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should throw if the added UnitType already exists', async function(){
+      const data = wtHotel.contract.addUnitType.getData(unitType.address);
+      await wtIndex.callHotel(0, data, {from: hotelAccount});
+
+      try {
+        await wtIndex.callHotel(0, data, {from: hotelAccount});
         assert(false)
       } catch(e) {
         assert(help.isInvalidOpcodeEx(e));
@@ -198,6 +198,16 @@ contract('Hotel', function(accounts) {
       assert.isDefined(info.units[unit.address]);
       assert.isTrue(unitTypeCount.plus(1).equals(await typeInterface.totalUnits()));
     });
+    
+    it('should throw if not executed by owner', async function() {
+      const unit = await Unit.new(wtHotel.address, typeNameHex, {from: hotelAccount});
+      try {
+        await wtHotel.addUnit(unit.address, {from: nonOwnerAccount});
+        assert(false);
+      } catch (e){
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
 
     it('should throw if the UnitType of the Unit does not exist', async function(){
       const unknownTypeNameHex = web3.toHex('UNKNOWN');
@@ -211,16 +221,6 @@ contract('Hotel', function(accounts) {
         assert(help.isInvalidOpcodeEx(e));
       }
     });
-
-    it('should throw if not executed by owner', async function() {
-      const unit = await Unit.new(wtHotel.address, typeNameHex, {from: hotelAccount});
-      try {
-        await wtHotel.addUnit(unit.address, {from: nonOwnerAccount});
-        assert(false);
-      } catch (e){
-        assert(help.isInvalidOpcodeEx(e));
-      }
-    })
   });
 
   describe('removeUnitType', function(){
@@ -239,6 +239,15 @@ contract('Hotel', function(accounts) {
       const info = await help.getHotelInfo(wtHotel);
 
       assert.isUndefined(info.unitTypes[typeName]);
+    });
+
+    it('should throw if not executed by owner', async function() {
+      try {
+        await wtHotel.removeUnitType(typeNameHex, validIndex, {from: nonOwnerAccount});
+        assert(false);
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
     });
 
     it('should throw if the unit type to be removed does not exist', async function(){
@@ -264,15 +273,6 @@ contract('Hotel', function(accounts) {
         assert(help.isInvalidOpcodeEx(e));
       }
     });
-
-    it('should throw if not executed by owner', async function() {
-      try {
-        await wtHotel.removeUnitType(typeNameHex, validIndex, {from: nonOwnerAccount});
-        assert(false);
-      } catch (e) {
-        assert(help.isInvalidOpcodeEx(e));
-      }
-    })
   });
 
   describe('removeUnit', function(){
@@ -338,6 +338,15 @@ contract('Hotel', function(accounts) {
       }
     });
 
+    it('should throw if not executed by owner', async function() {
+      try {
+        await wtHotel.changeUnitType(hexBasic, unitTypeReplacement.address, {from: nonOwnerAccount});
+        assert(false)
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
     it('should throw if the UnitType does not exist', async function(){
       const hexUnknown = web3.toHex('UNKNOWN');
       const data = wtHotel.contract.changeUnitType.getData(hexUnknown, unitTypeReplacement.address);
@@ -349,15 +358,6 @@ contract('Hotel', function(accounts) {
         assert(help.isInvalidOpcodeEx(e));
       }
     });
-
-    it('should throw if not executed by owner', async function() {
-      try {
-        await wtHotel.changeUnitType(hexBasic, unitTypeReplacement.address, {from: nonOwnerAccount});
-        assert(false)
-      } catch (e) {
-        assert(help.isInvalidOpcodeEx(e));
-      }
-    })
   });
 
   describe('callUnitType', function(){
@@ -421,6 +421,16 @@ contract('Hotel', function(accounts) {
       assert.equal(edits.maxGuests, maxGuests);
       assert.equal(edits.price, price);
     });
+    
+    it('should throw if not executed by owner', async function() {
+      const addAmenityData = typeInterface.contract.addAmenity.getData(amenityNumber);
+      try {
+        await wtHotel.callUnitType(typeNameHex, addAmenityData, {from: nonOwnerAccount})
+        assert(false);
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
 
     it('should throw if the hotel does not have the UnitType being called', async function(){
       const hexUnknown = web3.toHex('UNKNOWN_ROOM');
@@ -440,16 +450,6 @@ contract('Hotel', function(accounts) {
 
     // Not much throwing on UnitType except OnlyOwner which already throws.
     it.skip('should throw if the call to the UnitType returns false');
-
-    it('should throw if not executed by owner', async function() {
-      const addAmenityData = typeInterface.contract.addAmenity.getData(amenityNumber);
-      try {
-        await wtHotel.callUnitType(typeNameHex, addAmenityData, {from: nonOwnerAccount})
-        assert(false);
-      } catch (e) {
-        assert(help.isInvalidOpcodeEx(e));
-      }
-    })
   });
 
   describe('callUnit', function(){
@@ -479,6 +479,16 @@ contract('Hotel', function(accounts) {
       assert.equal(reservation[0], price);
       assert(help.isZeroAddress(reservation[2]));
     });
+    
+    it('should throw if not executed by owner', async function() {
+      setPriceData = unitInterface.contract.setSpecialPrice.getData(price, fromDay, daysAmount);
+      try {
+        await wtHotel.callUnit(unit.address, setPriceData, {from: nonOwnerAccount});
+        assert(false);
+      } catch(e) {
+        assert(help.isInvalidOpcodeEx);
+      }
+    });
 
     it('should fail if the Unit is not listed in the Hotels index of Units', async function(){
       const unknownUnit = await Unit.new(wtHotel.address, typeNameHex, {from: hotelAccount});
@@ -492,15 +502,5 @@ contract('Hotel', function(accounts) {
         assert(help.isInvalidOpcodeEx);
       }
     });
-
-    it('should throw if not executed by owner', async function() {
-      setPriceData = unitInterface.contract.setSpecialPrice.getData(price, fromDay, daysAmount);
-      try {
-        await wtHotel.callUnit(unit.address, setPriceData, {from: nonOwnerAccount});
-        assert(false);
-      } catch(e) {
-        assert(help.isInvalidOpcodeEx);
-      }
-    })  
   });
 });

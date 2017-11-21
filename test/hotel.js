@@ -486,7 +486,7 @@ contract('Hotel', function(accounts) {
         await wtHotel.callUnit(unit.address, setPriceData, {from: nonOwnerAccount});
         assert(false);
       } catch(e) {
-        assert(help.isInvalidOpcodeEx);
+        assert(help.isInvalidOpcodeEx(e));
       }
     });
 
@@ -499,7 +499,7 @@ contract('Hotel', function(accounts) {
         await wtIndex.callHotel(0, callUnitData, {from: hotelAccount});
         assert(false);
       } catch(e) {
-        assert(help.isInvalidOpcodeEx);
+        assert(help.isInvalidOpcodeEx(e));
       }
     });
   });
